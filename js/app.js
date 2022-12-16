@@ -5,16 +5,21 @@ var itemWrapper = document.querySelector("main");
 function displayMatches(matches) {
   itemWrapper.innerHTML = "";
 
+  if (!matches) {
+    itemWrapper.innerHTML = '<p class="no-search">No results found!</p>';
+    return;
+  }
+
   for (var matchObj of matches) {
     itemWrapper.insertAdjacentHTML(
       "beforeend",
       `
    <div class="movie-item" style="background-image: linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)),
-    url(${matchObj.image_url});">
-     <h3>${matchObj.title}</h3>
-     <p>${matchObj.description}
+    url(${matchObj.Poster});">
+     <h3>${matchObj.Title}</h3>
+     <p>Release Year: ${matchObj.Year}
      </p>
-     <a href=${matchObj.imdb_url}" target="_blank">View More Details</a>
+     <a href="https://www.imdb.com/title/${matchObj.imdbID}" target="_blank">View More Details</a>
    </div>
    `
     );
@@ -27,29 +32,19 @@ function getMovieData(event) {
   var searchText = searchInput.value.trim().toLowerCase();
 
   if (keyCode === 13 && searchText) {
-    var matches = [];
+    var responsePromise = fetch(
+      `https://www.omdbapi.com/?apikey=ffdc8c20&s=${searchText}`
+    );
 
-    for (var movie of movieData) {
-      if (movie.title.toLowerCase().includes(searchText)) {
-        matches.push(movie);
-      }
+    function handleResponse(responseObj) {
+      return responseObj.json();
     }
+
+    responsePromise.then(handleResponse).then(function (data) {
+      displayMatches(data.Search);
+    });
   }
 }
-
-var responsePromise = fetch(
-  "https://www.omdbapi.com/?apikey=ffdc8c20&t=jurassic%20park"
-);
-
-function handleResponse(responseObj) {
-  return responseObj.json();
-}
-
-responsePromise.then(handleResponse).then(function (data) {
-  console.log(data);
-});
-
-displayMatches(matches);
 
 function init() {
   searchInput.addEventListener("keydown", getMovieData);
